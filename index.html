@@ -1,0 +1,223 @@
+<!DOCTYPE HTML><html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <style>
+        html {
+          font-family: Arial; 
+          display: inline-block; 
+          text-align: center;
+        }
+        body {  margin: 0;}
+        .topnav { 
+          overflow: hidden; 
+          background-color: #50B8B4; 
+          color: white; 
+          font-size: 0.7rem; 
+        }
+        h2 { font-size: 3.0rem; }
+        p { font-size: 5rem; }
+        .units { font-size: 1.2rem; }
+        .ds-labels{
+          font-size: 1.5rem;
+          vertical-align:middle;
+          padding-bottom: 15px;
+        }
+    
+    
+    .navbar {
+      overflow: hidden;
+      background-color: #333;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    
+    .navbar a {
+      float: left;
+      display: block;
+      color: #f2f2f2;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      font-size: 17px;
+    }
+    
+    .navbar a:hover {
+      background: #50B8B4;
+      color: black;
+    }
+    
+    .navbar a.active {
+      background-color: #50B8B4;
+      color: white;
+    }
+    
+    .main {
+      padding: 16px;
+      margin-bottom: 30px;
+    }
+    
+    [type="number"]::-webkit-inner-spin-button,
+    [type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      height: auto;
+    }
+    
+    .stepper {
+    padding:1mm;
+    }
+    .stepper input {
+      width: 3em;
+      height: 100%;
+      text-align: center;
+      border: 0;
+      background: transparent;
+      color: #000;
+    }
+    .stepper button {
+      font-weight: 600;
+      height: 100%;
+      line-height: 1em;
+      font-size: 1.4em;
+      padding: 0.2em !important;
+      background: #eee;
+      color: #333;
+      border-radius: 5pt;
+    }
+    
+      </style>
+    </head>
+    <body>
+        <div class="topnav">
+            <h1>KOMBİ KONTROL PANELİ</h1>
+            <h3 id="timestampHeadertemp">Sicaklik</h4>
+            <h3 id="timestampHeaderhumi">nem</h4>
+            <h3 id="timestampHeaderbatt">pil</h4>
+            <h3 id="timestampHeaderrssi">sinyalgucu</h4>
+            <h3 id="timestampHeaderstmp">baglantisayisi</h4>
+        </div>
+      <p>
+        <p style="margin-bottom: 0px;">
+        <span id="temperaturec">---</span>
+        <sup class="units">&deg;C</sup>
+      </p>
+    
+      <span class="stepper">
+        <div>
+          <br align="left">Istenen Sicaklik
+          <br>
+          <button onclick="stepperInput('sicaklikSet', -0.1, 18)">–</button>
+          <input type="number" id="sicaklikSet" value="22.0" min="18" max="30" step="0.1" readonly>
+          <button onclick="stepperInput('sicaklikSet', 0.1, 30)">+</button>
+        </div>
+        <br>
+        <div>
+          <br align="left"> Ihtiyat Payi
+          <br>
+          <button onclick="stepperInput('histerisis', -0.05, 0)">–</button>
+          <input type="number" id="histerisis" value="0.2" min="0" max="2.0" step="0.05" readonly>
+          <button onclick="stepperInput('histerisis', 0.05, 2.0)">+</button>
+        </div>            
+        <div>
+          <br>
+          <button onclick="sicaklikAyarKaydet()">Kaydet</button>
+        </div>
+      </span>
+    
+      <div class="navbar">
+        <a onclick='sicaklikAyarButon()'>Sıcaklık Ayarı</a>
+        <a onclick='SensorBilgileri()'>Sensor Bilgileri</a>
+        <a onclick='alert("Kombi v0.3\nSıcaklık:\nKIRMIZI renk ise KOMBI DURUYOR\nYEŞİL renk ise KOMBI ÇALIŞIYOR")'>Yardım</a>
+      </div>
+    </body>
+    <script>
+    setInterval(function () {
+      var xhttp_1 = new XMLHttpRequest();
+      xhttp_1.onreadystatechange = function() {
+        if (xhttp_1.readyState == 4 && xhttp_1.status == 200) {
+          document.getElementById("temperaturec").innerHTML = parseFloat(JSON.parse(xhttp_1.responseText).sicaklikAktuel).toFixed(2);
+          if (document.querySelector("body > span").style.display=="none"){
+            document.querySelector("#sicaklikSet").value = parseFloat(JSON.parse(xhttp_1.responseText).sicaklikSet).toFixed(2);
+            document.querySelector("#histerisis").value = parseFloat(JSON.parse(xhttp_1.responseText).histerisis).toFixed(2);
+          }
+          document.querySelector("#timestampHeadertemp").textContent = "Sicaklik : "+JSON.stringify(JSON.parse(xhttp_1.responseText).Sensor.temperature) + " °C"||"---";
+          document.querySelector("#timestampHeaderhumi").textContent = "Nem : "+JSON.stringify(JSON.parse(xhttp_1.responseText).Sensor.humidity) + " rh%"||"---";
+          document.querySelector("#timestampHeaderbatt").textContent = "Pil Gerilimi : "+JSON.stringify(JSON.parse(xhttp_1.responseText).Sensor.batt_voltage) + " V"||"---";
+          document.querySelector("#timestampHeaderrssi").textContent = "Sinyal Gücü : "+JSON.stringify(JSON.parse(xhttp_1.responseText).Sensor.rssi) + " dBm"||"---";
+          document.querySelector("#timestampHeaderstmp").textContent = "Sorgu Adedi : "+JSON.stringify(JSON.parse(xhttp_1.responseText).Sensor.timestamp) + ""||"---";
+          JSON.parse(xhttp_1.responseText).role ? document.querySelector("#temperaturec").style.color="rgb(200, 10, 25)" : document.querySelector("#temperaturec").style.color="rgb(5, 158, 138)";
+        }
+      };
+      xhttp_1.open("GET", "/get?json", true);
+      xhttp_1.send();
+    }, 3000) ;
+    
+    function sicaklikAyarButon(){
+        if (document.querySelector("body > span").style.display=='none'){
+            document.querySelector("body > span").style.display='';
+        }
+        else{
+            document.querySelector("body > span").style.display='none';
+        }
+    }
+    
+    function SensorBilgileri(){
+        if(document.getElementById("timestampHeadertemp").style.display=='none'){
+              document.getElementById("timestampHeadertemp").style.display='';
+              document.getElementById("timestampHeaderhumi").style.display='';
+              document.getElementById("timestampHeaderbatt").style.display='';
+              document.getElementById("timestampHeaderrssi").style.display='';
+              document.getElementById("timestampHeaderstmp").style.display='';
+        }
+        else{
+              document.getElementById("timestampHeadertemp").style.display='none';
+              document.getElementById("timestampHeaderhumi").style.display='none';
+              document.getElementById("timestampHeaderbatt").style.display='none';
+              document.getElementById("timestampHeaderrssi").style.display='none';
+              document.getElementById("timestampHeaderstmp").style.display='none';
+        }
+    }
+
+    function cihazAyarButon(){
+      document.querySelector("body > span").style.display='none';
+      var timestamp = new Date().getTime();
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "/set?timestamp="+timestamp);
+      xhttp.send();
+    }
+    
+    function stepperInput(id, s, m) {
+      var xhttp = new XMLHttpRequest();
+      
+      var el = document.getElementById(id);
+      console.log("id:",id,"s:",s,"m:",m,"el:",el);
+      if (s > 0) {
+        if (parseFloat(el.value) < m) {
+          el.value = (parseFloat(el.value) + s).toFixed(2);
+        }
+      } 
+      else {
+        if (parseFloat(el.value) > m) {
+          el.value = (parseFloat(el.value) + s).toFixed(2);
+        }
+      }
+    }
+    function sicaklikAyarKaydet(){
+      var xhttp_1 = new XMLHttpRequest();
+      var xhttp_2 = new XMLHttpRequest();
+      
+      xhttp_1.open("GET", "/set?sicaklikSet="+document.querySelector("#sicaklikSet").value);
+      xhttp_1.send();
+    
+      xhttp_2.open("GET", "/set?histerisis="+document.querySelector("#histerisis").value);
+      xhttp_2.send();
+    }
+    document.querySelector("body > span").style.display='none';
+    document.getElementById("timestampHeadertemp").style.display='none';
+    document.getElementById("timestampHeaderhumi").style.display='none';
+    document.getElementById("timestampHeaderbatt").style.display='none';
+    document.getElementById("timestampHeaderrssi").style.display='none';
+    document.getElementById("timestampHeaderstmp").style.display='none';
+    </script>
+    </html>
